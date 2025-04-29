@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Task Manager</title>
+        <style>
+            :root {
+                --primary-color: #4a6fa5;
+                --secondary-color: #334e68;
+                --background-color: #f8f9fa;
+                --card-color: #ffffff;
+                --text-color: #2d3748;
+                --border-color: #e2e8f0;
+                --completed-color: #48bb78;
+                --overdue-color: #e53e3e;
+            }
+
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            }
+
+            body {
+                background-color: var(--background-color);
+                color: var(--text-color);
+                line-height: 1.6;
+                padding: 20px;
+            }
+
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
+            }
+
+            header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 30px;
+                padding-bottom: 15px;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            h1 {
+                color: var(--primary-color);
+                font-size: 28px;
+            }
+
+            .task-form {
+                background-color: var(--card-color);
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+                margin-bottom: 30px;
+                display: grid;
+                grid-template-columns: 1fr 200px 120px;
+                gap: 15px;
+            }
+
+            .form-group {
+                display: flex;
+                flex-direction: column;
+            }
+
+            label {
+                margin-bottom: 5px;
+                font-size: 14px;
+                color: var(--secondary-color);
+            }
+
+            input,
+            textarea {
+                padding: 10px;
+                border: 1px solid var(--border-color);
+                border-radius: 4px;
+                background-color: #f1f5f9;
+                color: var(--text-color);
+            }
+
+            textarea {
+                resize: vertical;
+                min-height: 60px;
+            }
+
+            button {
+                background-color: var(--primary-color);
+                color: white;
+                border: none;
+                padding: 10px 15px;
+                border-radius: 4px;
+                cursor: pointer;
+                transition: background-color 0.2s;
+            }
+
+            button:hover {
+                background-color: var(--secondary-color);
+            }
+
+            .controls {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 15px;
+                margin-bottom: 20px;
+            }
+
+            .filter-group,
+            .sort-group {
+                display: flex;
+                align-items: center;
+            }
+
+            select {
+                padding: 8px;
+                border: 1px solid var(--border-color);
+                border-radius: 4px;
+                background-color: #f1f5f9;
+                color: var(--text-color);
+            }
+
+            .grid-container {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                gap: 20px;
+            }
+
+            .task-card {
+                background-color: var(--card-color);
+                border-radius: 8px;
+                padding: 15px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+                position: relative;
+                transition:
+                    transform 0.2s,
+                    box-shadow 0.2s;
+            }
+
+            .task-card:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            }
+
+            .task-content {
+                margin-bottom: 10px;
+                word-break: break-word;
+            }
+
+            .task-date {
+                font-size: 14px;
+                color: var(--secondary-color);
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                margin-bottom: 15px;
+            }
+
+            .task-status {
+                position: absolute;
+                top: 15px;
+                right: 15px;
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+            }
+
+            .status-incomplete {
+                background-color: var(--primary-color);
+            }
+
+            .status-completed {
+                background-color: var(--completed-color);
+            }
+
+            .status-overdue {
+                background-color: var(--overdue-color);
+            }
+
+            .task-actions {
+                display: flex;
+                justify-content: space-between;
+                margin-top: 15px;
+            }
+
+            .action-btn {
+                background-color: transparent;
+                color: var(--secondary-color);
+                padding: 5px 10px;
+                font-size: 13px;
+            }
+
+            .action-btn:hover {
+                color: var(--primary-color);
+            }
+
+            .notification {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background-color: var(--secondary-color);
+                color: white;
+                padding: 15px 25px;
+                border-radius: 4px;
+                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+                transform: translateY(100px);
+                opacity: 0;
+                transition:
+                    transform 0.3s,
+                    opacity 0.3s;
+            }
+
+            .notification.show {
+                transform: translateY(0);
+                opacity: 1;
+            }
+
+            .empty-state {
+                grid-column: 1 / -1;
+                text-align: center;
+                padding: 40px;
+                background-color: var(--card-color);
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            }
+
+            .empty-state p {
+                color: var(--secondary-color);
+                margin-bottom: 15px;
+            }
+
+            @media (max-width: 768px) {
+                .task-form {
+                    grid-template-columns: 1fr;
+                }
+
+                .controls {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+
+                .grid-container {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <header>
+                <h1>Task Manager</h1>
+            </header>
+
+            <form id="task-form" class="task-form">
+                <div class="form-group">
+                    <label for="task-content">Task Content</label>
+                    <textarea
+                        id="task-content"
+                        required
+                        placeholder="Enter task details"
+                    ></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="task-date">Due Date</label>
+                    <input type="date" id="task-date" required />
+                </div>
+                <div style="grid-column: 1 / -1; justify-self: end">
+                    <button type="submit">Add Task</button>
+                </div>
+            </form>
+
+            <div class="controls">
+                <div class="filter-group">
+                    <label for="task-filter">Filter:</label>
+                    <select id="task-filter">
+                        <option value="all">All Tasks</option>
+                        <option value="incomplete">Incomplete</option>
+                        <option value="completed">Completed</option>
+                        <option value="overdue">Overdue</option>
+                    </select>
+                </div>
+
+                <div class="sort-group">
+                    <label for="task-sort">Sort by Date:</label>
+                    <select id="task-sort">
+                        <option value="asc">Oldest First</option>
+                        <option value="desc">Newest First</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid-container" id="tasks-container">
+                <!-- Tasks will be dynamically added here -->
+            </div>
+        </div>
+
+        <div class="notification" id="notification"></div>
+
+        <script>
+            // Task Manager Application
+            document.addEventListener("DOMContentLoaded", function () {
+                // DOM Elements
+                const taskForm = document.getElementById("task-form");
+                const tasksContainer =
+                    document.getElementById("tasks-container");
+                const taskContentInput =
+                    document.getElementById("task-content");
+                const taskDateInput = document.getElementById("task-date");
+                const taskFilterSelect = document.getElementById("task-filter");
+                const taskSortSelect = document.getElementById("task-sort");
+                const notificationElement =
+                    document.getElementById("notification");
+
+                // Set default date to today
+                const today = new Date();
+                const formattedDate = today.toISOString().split("T")[0];
+                taskDateInput.value = formattedDate;
+
+                // Task data management
+                let tasks = [];
+
+                // Load tasks from localStorage when the app starts
+                function loadTasks() {
+                    const savedTasks = localStorage.getItem("tasks");
+                    if (savedTasks) {
+                        try {
+                            tasks = JSON.parse(savedTasks);
+                            renderTasks();
+                            showNotification("Tasks loaded successfully");
+                        } catch (e) {
+                            console.error("Error loading tasks:", e);
+                            showNotification("Error loading tasks", "error");
+                        }
+                    }
+                }
+
+                // Save tasks to localStorage
+                function saveTasks() {
+                    try {
+                        localStorage.setItem("tasks", JSON.stringify(tasks));
+                    } catch (e) {
+                        console.error("Error saving tasks:", e);
+                        showNotification("Error saving tasks", "error");
+                    }
+                }
+
+                // Add a new task
+                function addTask(content, dueDate) {
+                    const newTask = {
+                        id: Date.now().toString(),
+                        content: content,
+                        dueDate: dueDate,
+                        status: "incomplete",
+                        createdAt: new Date().toISOString(),
+                    };
+
+                    tasks.push(newTask);
+                    saveTasks();
+                    renderTasks();
+                    showNotification("Task added successfully");
+                }
+
+                // Delete a task
+                function deleteTask(id) {
+                    tasks = tasks.filter((task) => task.id !== id);
+                    saveTasks();
+                    renderTasks();
+                    showNotification("Task deleted");
+                }
+
+                // Update task status
+                function updateTaskStatus(id, newStatus) {
+                    const taskIndex = tasks.findIndex((task) => task.id === id);
+                    if (taskIndex !== -1) {
+                        tasks[taskIndex].status = newStatus;
+                        saveTasks();
+                        renderTasks();
+
+                        if (newStatus === "completed") {
+                            showNotification("Task completed");
+                        } else {
+                            showNotification("Task marked as incomplete");
+                        }
+                    }
+                }
+
+                // Check if a task is overdue
+                function isOverdue(dueDate) {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const taskDueDate = new Date(dueDate);
+                    return (
+                        taskDueDate < today &&
+                        taskDueDate.getDate() !== today.getDate()
+                    );
+                }
+
+                // Render tasks based on current filters and sort
+                function renderTasks() {
+                    // Apply filter
+                    let filteredTasks = [...tasks];
+
+                    switch (taskFilterSelect.value) {
+                        case "incomplete":
+                            filteredTasks = filteredTasks.filter(
+                                (task) =>
+                                    task.status === "incomplete" &&
+                                    !isOverdue(task.dueDate),
+                            );
+                            break;
+                        case "completed":
+                            filteredTasks = filteredTasks.filter(
+                                (task) => task.status === "completed",
+                            );
+                            break;
+                        case "overdue":
+                            filteredTasks = filteredTasks.filter(
+                                (task) =>
+                                    isOverdue(task.dueDate) &&
+                                    task.status !== "completed",
+                            );
+                            break;
+                    }
+
+                    // Apply sorting
+                    filteredTasks.sort((a, b) => {
+                        const dateA = new Date(a.dueDate);
+                        const dateB = new Date(b.dueDate);
+
+                        return taskSortSelect.value === "asc"
+                            ? dateA - dateB
+                            : dateB - dateA;
+                    });
+
+                    // Clear container
+                    tasksContainer.innerHTML = "";
+
+                    // Show empty state if no tasks
+                    if (filteredTasks.length === 0) {
+                        const emptyState = document.createElement("div");
+                        emptyState.className = "empty-state";
+                        emptyState.innerHTML = `
+                        <p>No ${taskFilterSelect.value !== "all" ? taskFilterSelect.value : ""} tasks found</p>
+                        <button id="add-sample-task">Add a sample task</button>
+                    `;
+                        tasksContainer.appendChild(emptyState);
+
+                        document
+                            .getElementById("add-sample-task")
+                            .addEventListener("click", function () {
+                                addTask(
+                                    "This is a sample task. Edit it to make it your own!",
+                                    formattedDate,
+                                );
+                            });
+
+                        return;
+                    }
+
+                    // Render each task
+                    filteredTasks.forEach((task) => {
+                        const taskCard = document.createElement("div");
+                        taskCard.className = "task-card";
+
+                        let statusClass = "status-incomplete";
+                        if (task.status === "completed") {
+                            statusClass = "status-completed";
+                        } else if (isOverdue(task.dueDate)) {
+                            statusClass = "status-overdue";
+                        }
+
+                        const formattedDueDate = new Date(
+                            task.dueDate,
+                        ).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                        });
+
+                        let dateText = `Due: ${formattedDueDate}`;
+                        if (
+                            isOverdue(task.dueDate) &&
+                            task.status !== "completed"
+                        ) {
+                            dateText +=
+                                ' <span style="color: var(--overdue-color);">(Overdue)</span>';
+                        }
+
+                        taskCard.innerHTML = `
+                        <div class="task-content">${task.content}</div>
+                        <div class="task-date">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                            ${dateText}
+                        </div>
+                        <div class="task-status ${statusClass}"></div>
+                        <div class="task-actions">
+                            <button class="action-btn toggle-status">${task.status === "completed" ? "Mark Incomplete" : "Complete Task"}</button>
+                            <button class="action-btn delete-task">Delete</button>
+                        </div>
+                    `;
+
+                        tasksContainer.appendChild(taskCard);
+
+                        // Add event listeners
+                        const toggleBtn =
+                            taskCard.querySelector(".toggle-status");
+                        const deleteBtn =
+                            taskCard.querySelector(".delete-task");
+
+                        toggleBtn.addEventListener("click", () => {
+                            const newStatus =
+                                task.status === "completed"
+                                    ? "incomplete"
+                                    : "completed";
+                            updateTaskStatus(task.id, newStatus);
+                        });
+
+                        deleteBtn.addEventListener("click", () => {
+                            deleteTask(task.id);
+                        });
+                    });
+                }
+
+                // Show notification
+                function showNotification(message, type = "success") {
+                    notificationElement.textContent = message;
+                    notificationElement.className = `notification ${type} show`;
+
+                    setTimeout(() => {
+                        notificationElement.classList.remove("show");
+                    }, 3000);
+                }
+
+                // Event Listeners
+                taskForm.addEventListener("submit", function (e) {
+                    e.preventDefault();
+
+                    const content = taskContentInput.value.trim();
+                    const dueDate = taskDateInput.value;
+
+                    if (content && dueDate) {
+                        addTask(content, dueDate);
+                        taskContentInput.value = "";
+                        taskDateInput.value = formattedDate;
+                    }
+                });
+
+                taskFilterSelect.addEventListener("change", renderTasks);
+                taskSortSelect.addEventListener("change", renderTasks);
+
+                // Initialize the app
+                loadTasks();
+            });
+        </script>
+    </body>
+</html>

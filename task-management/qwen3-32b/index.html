@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Task Manager</title>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <div class="app-container">
+            <form id="task-form">
+                <input
+                    type="text"
+                    id="task-content"
+                    placeholder="Enter task content..."
+                    required
+                />
+                <input type="date" id="due-date" required />
+                <button type="submit">Add Task</button>
+            </form>
+
+            <div class="controls">
+                <div class="filter-sort">
+                    <label for="task-filter">Filter:</label>
+                    <select id="task-filter">
+                        <option value="all">All</option>
+                        <option value="incomplete">Incomplete</option>
+                        <option value="completed">Completed</option>
+                        <option value="overdue">Overdue</option>
+                    </select>
+
+                    <label for="task-sort">Sort by:</label>
+                    <select id="task-sort">
+                        <option value="asc">Date (Ascending)</option>
+                        <option value="desc">Date (Descending)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="task-list" id="task-list"></div>
+        </div>
+        <script src="script.js"></script>
+    </body>
+</html>

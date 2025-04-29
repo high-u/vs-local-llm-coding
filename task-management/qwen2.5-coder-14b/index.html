@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Task Management</title>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <div class="container">
+            <h1>Task Manager</h1>
+            <div class="filters">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="incomplete">
+                    Incomplete
+                </button>
+                <button class="filter-btn" data-filter="completed">
+                    Completed
+                </button>
+                <button class="filter-btn" data-filter="overdue">
+                    Overdue
+                </button>
+            </div>
+            <form id="task-form">
+                <input
+                    type="text"
+                    id="task-content"
+                    placeholder="Task content"
+                    required
+                />
+                <input type="date" id="task-date" required />
+                <button type="submit">Add Task</button>
+            </form>
+            <ul id="task-list"></ul>
+        </div>
+        <script src="script.js"></script>
+    </body>
+</html>

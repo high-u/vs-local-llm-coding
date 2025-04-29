@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Task Manager</title>
+        <style>
+            :root {
+                --primary-color: #4a4a4a;
+                --secondary-color: #333333;
+                --tertiary-color: #222222;
+                --completed-color: #888888;
+                --overdue-color: #d9534f;
+                --inactive-color: rgba(0, 0, 0, 0.1);
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            }
+
+            body {
+                background-color: var(--tertiary-color);
+                color: var(--primary-color);
+                padding: 20px;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                width: 100%;
+            }
+
+            header {
+                padding: 20px 0;
+                border-bottom: 1px solid var(--inactive-color);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .app-title {
+                font-size: 24px;
+                font-weight: 500;
+                color: var(--primary-color);
+            }
+
+            .add-task-container {
+                margin: 20px 0;
+                background-color: var(--secondary-color);
+                padding: 20px;
+                border-radius: 4px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            .add-task-form {
+                display: grid;
+                gap: 15px;
+                max-width: 600px;
+                margin: 0 auto;
+            }
+
+            .form-group {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            label {
+                font-size: 14px;
+                color: var(--primary-color);
+            }
+
+            input,
+            textarea {
+                padding: 10px;
+                border: 1px solid var(--inactive-color);
+                background-color: var(--tertiary-color);
+                color: var(--primary-color);
+                border-radius: 4px;
+                font-size: 14px;
+            }
+
+            input[type="date"] {
+                width: 150px;
+            }
+
+            textarea {
+                resize: vertical;
+                min-height: 80px;
+            }
+
+            button {
+                padding: 10px 15px;
+                background-color: var(--primary-color);
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                transition: background-color 0.2s;
+                font-size: 14px;
+            }
+
+            button:hover {
+                background-color: var(--secondary-color);
+            }
+
+            .controls {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 20px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .filter-container,
+            .sort-container {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+            select {
+                padding: 8px;
+                border: 1px solid var(--inactive-color);
+                background-color: var(--tertiary-color);
+                color: var(--primary-color);
+                border-radius: 4px;
+                cursor: pointer;
+            }
+
+            .task-list {
+                display: grid;
+                gap: 15px;
+                margin-top: 20px;
+            }
+
+            .task-item {
+                background-color: var(--secondary-color);
+                padding: 15px;
+                border-radius: 4px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                transition:
+                    transform 0.2s,
+                    opacity 0.2s;
+            }
+
+            .task-item.completed {
+                background-color: var(--completed-color);
+                color: #666;
+            }
+
+            .task-item.overdue {
+                border-left: 4px solid var(--overdue-color);
+            }
+
+            .task-header {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 10px;
+                align-items: flex-start;
+            }
+
+            .task-title {
+                font-size: 16px;
+                font-weight: 500;
+                word-break: break-word;
+                flex-grow: 1;
+            }
+
+            .task-date {
+                font-size: 12px;
+                color: var(--primary-color);
+                margin-top: 5px;
+            }
+
+            .overdue .task-date {
+                color: var(--overdue-color);
+                font-weight: bold;
+            }
+
+            .task-actions {
+                display: flex;
+                gap: 10px;
+            }
+
+            .task-description {
+                margin-bottom: 15px;
+                line-height: 1.4;
+                word-break: break-word;
+            }
+
+            .status-badge {
+                display: inline-block;
+                padding: 3px 8px;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: 500;
+            }
+
+            .badge-incomplete {
+                background-color: rgba(74, 74, 74, 0.2);
+                color: var(--primary-color);
+            }
+
+            .badge-completed {
+                background-color: rgba(136, 136, 136, 0.3);
+                color: #666;
+            }
+
+            .badge-overdue {
+                background-color: rgba(217, 83, 79, 0.2);
+                color: var(--overdue-color);
+            }
+
+            .empty-state {
+                text-align: center;
+                padding: 40px 20px;
+                background-color: var(--secondary-color);
+                border-radius: 4px;
+                color: #888;
+            }
+
+            .notification {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                background-color: var(--primary-color);
+                color: white;
+                border-radius: 4px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+                transform: translateY(100px);
+                opacity: 0;
+                transition:
+                    transform 0.3s,
+                    opacity 0.3s;
+                z-index: 1000;
+            }
+
+            .notification.show {
+                transform: translateY(0);
+                opacity: 1;
+            }
+
+            @media (max-width: 768px) {
+                .add-task-form {
+                    grid-template-columns: 1fr;
+                }
+
+                .controls {
+                    flex-direction: column-reverse;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <header>
+                <h1 class="app-title">Task Manager</h1>
+            </header>
+
+            <div class="add-task-container">
+                <form id="task-form" class="add-task-form">
+                    <div class="form-group">
+                        <label for="task-content">Task description:</label>
+                        <textarea
+                            id="task-content"
+                            required
+                            placeholder="What needs to be done?"
+                        ></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="due-date">Due date:</label>
+                        <input type="date" id="due-date" required />
+                    </div>
+                    <button type="submit">Add Task</button>
+                </form>
+            </div>
+
+            <div class="controls">
+                <div class="filter-container">
+                    <label for="task-filter">Filter:</label>
+                    <select id="task-filter">
+                        <option value="all">All Tasks</option>
+                        <option value="incomplete">Incomplete</option>
+                        <option value="completed">Completed</option>
+                        <option value="overdue">Overdue</option>
+                    </select>
+                </div>
+
+                <div class="sort-container">
+                    <label for="task-sort">Sort by:</label>
+                    <select id="task-sort">
+                        <option value="date-asc">
+                            Due Date (Earliest First)
+                        </option>
+                        <option value="date-desc">
+                            Due Date (Latest First)
+                        </option>
+                    </select>
+                </div>
+            </div>
+
+            <main>
+                <div id="task-list" class="task-list">
+                    <!-- Tasks will be rendered here -->
+                </div>
+            </main>
+        </div>
+
+        <div id="notification" class="notification"></div>
+
+        <script>
+            // Task Manager Application
+            document.addEventListener("DOMContentLoaded", () => {
+                // DOM Elements
+                const taskForm = document.getElementById("task-form");
+                const taskContentInput =
+                    document.getElementById("task-content");
+                const dueDateInput = document.getElementById("due-date");
+                const taskListElement = document.getElementById("task-list");
+                const filterSelect = document.getElementById("task-filter");
+                const sortSelect = document.getElementById("task-sort");
+                const notificationElement =
+                    document.getElementById("notification");
+
+                // Set default due date to tomorrow
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                dueDateInput.valueAsDate = tomorrow;
+
+                // Application State
+                let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+
+                // Initialize the application
+                renderTasks();
+
+                // Event Listeners
+                taskForm.addEventListener("submit", handleAddTask);
+                filterSelect.addEventListener("change", renderTasks);
+                sortSelect.addEventListener("change", renderTasks);
+
+                // Functions
+                function handleAddTask(e) {
+                    e.preventDefault();
+
+                    const content = taskContentInput.value.trim();
+                    const dueDate = dueDateInput.value;
+
+                    if (!content || !dueDate) return;
+
+                    const newTask = {
+                        id: Date.now().toString(),
+                        content,
+                        dueDate,
+                        status: "incomplete",
+                        createdAt: new Date().toISOString(),
+                    };
+
+                    tasks.unshift(newTask);
+                    saveTasks();
+                    renderTasks();
+
+                    taskForm.reset();
+
+                    // Set default due date to tomorrow again after submit
+                    const nextTomorrow = new Date();
+                    nextTomorrow.setDate(nextTomorrow.getDate() + 1);
+                    dueDateInput.valueAsDate = nextTomorrow;
+
+                    showNotification("Task added successfully!");
+                }
+
+                function renderTasks() {
+                    const filterValue = filterSelect.value;
+                    const sortValue = sortSelect.value;
+
+                    let filteredTasks = [...tasks];
+
+                    // Apply filtering
+                    if (filterValue === "incomplete") {
+                        filteredTasks = filteredTasks.filter(
+                            (task) => task.status === "incomplete",
+                        );
+                    } else if (filterValue === "completed") {
+                        filteredTasks = filteredTasks.filter(
+                            (task) => task.status === "completed",
+                        );
+                    } else if (filterValue === "overdue") {
+                        const today = new Date().toISOString().split("T")[0];
+                        filteredTasks = filteredTasks.filter(
+                            (task) =>
+                                task.dueDate < today &&
+                                task.status === "incomplete",
+                        );
+                    }
+
+                    // Apply sorting
+                    if (sortValue === "date-asc") {
+                        filteredTasks.sort(
+                            (a, b) => new Date(a.dueDate) - new Date(b.dueDate),
+                        );
+                    } else if (sortValue === "date-desc") {
+                        filteredTasks.sort(
+                            (a, b) => new Date(b.dueDate) - new Date(a.dueDate),
+                        );
+                    }
+
+                    // Clear the current task list
+                    taskListElement.innerHTML = "";
+
+                    // Render tasks or empty state
+                    if (filteredTasks.length === 0) {
+                        const emptyState = document.createElement("div");
+                        emptyState.className = "empty-state";
+
+                        let message = "";
+                        if (tasks.length === 0) {
+                            message =
+                                "No tasks yet. Add your first task above!";
+                        } else {
+                            message = `No tasks match the current filter.`;
+                        }
+
+                        emptyState.textContent = message;
+                        taskListElement.appendChild(emptyState);
+                    } else {
+                        filteredTasks.forEach((task) => {
+                            const taskElement = createTaskElement(task);
+                            taskListElement.appendChild(taskElement);
+                        });
+                    }
+                }
+
+                function createTaskElement(task) {
+                    const taskElement = document.createElement("div");
+                    taskElement.className = `task-item ${task.status}`;
+
+                    if (isOverdue(task)) {
+                        taskElement.classList.add("overdue");
+                    }
+
+                    // Task header
+                    const taskHeader = document.createElement("div");
+                    taskHeader.className = "task-header";
+
+                    const taskTitle = document.createElement("div");
+                    taskTitle.className = "task-title";
+                    taskTitle.textContent = task.content;
+
+                    const taskDate = document.createElement("div");
+                    taskDate.className = "task-date";
+
+                    // Format the date
+                    const dueDate = new Date(task.dueDate);
+                    const formattedDate = `${dueDate.toLocaleDateString()} (${getDayOfWeek(dueDate)})`;
+                    taskDate.textContent = `Due: ${formattedDate}`;
+
+                    taskHeader.appendChild(taskTitle);
+                    taskHeader.appendChild(taskDate);
+
+                    // Task description
+                    const taskDescription = document.createElement("div");
+                    taskDescription.className = "task-description";
+                    taskDescription.textContent = task.content;
+
+                    // Status badge
+                    const statusBadge = document.createElement("span");
+                    statusBadge.className = `status-badge ${task.status === "completed" ? "badge-completed" : "badge-incomplete"}`;
+                    statusBadge.textContent =
+                        task.status === "completed"
+                            ? "Completed"
+                            : "Incomplete";
+
+                    // Task actions
+                    const taskActions = document.createElement("div");
+                    taskActions.className = "task-actions";
+
+                    const toggleStatusButton = document.createElement("button");
+                    toggleStatusButton.textContent =
+                        task.status === "completed"
+                            ? "Mark as Incomplete"
+                            : "Mark as Completed";
+                    toggleStatusButton.addEventListener("click", () =>
+                        toggleTaskStatus(task.id),
+                    );
+
+                    const deleteButton = document.createElement("button");
+                    deleteButton.textContent = "Delete";
+                    deleteButton.style.backgroundColor = "#d9534f";
+                    deleteButton.addEventListener("click", () =>
+                        deleteTask(task.id),
+                    );
+
+                    taskActions.appendChild(toggleStatusButton);
+                    taskActions.appendChild(deleteButton);
+
+                    // Assemble the task element
+                    taskElement.appendChild(taskHeader);
+                    taskElement.appendChild(statusBadge);
+                    taskElement.appendChild(taskDescription);
+                    taskElement.appendChild(taskActions);
+
+                    return taskElement;
+                }
+
+                function toggleTaskStatus(taskId) {
+                    const taskIndex = tasks.findIndex(
+                        (task) => task.id === taskId,
+                    );
+                    if (taskIndex !== -1) {
+                        // Toggle between incomplete and completed
+                        tasks[taskIndex].status =
+                            tasks[taskIndex].status === "completed"
+                                ? "incomplete"
+                                : "completed";
+
+                        saveTasks();
+                        renderTasks();
+
+                        const status =
+                            tasks[taskIndex].status === "completed"
+                                ? "completed"
+                                : "incomplete";
+                        showNotification(`Task ${status}d!`);
+                    }
+                }
+
+                function deleteTask(taskId) {
+                    tasks = tasks.filter((task) => task.id !== taskId);
+                    saveTasks();
+                    renderTasks();
+                    showNotification("Task deleted!");
+                }
+
+                function saveTasks() {
+                    localStorage.setItem("tasks", JSON.stringify(tasks));
+                }
+
+                function isOverdue(task) {
+                    const today = new Date().toISOString().split("T")[0];
+                    return task.dueDate < today && task.status === "incomplete";
+                }
+
+                function getDayOfWeek(date) {
+                    const days = [
+                        "Sun",
+                        "Mon",
+                        "Tue",
+                        "Wed",
+                        "Thu",
+                        "Fri",
+                        "Sat",
+                    ];
+                    return days[date.getDay()];
+                }
+
+                function showNotification(message) {
+                    notificationElement.textContent = message;
+                    notificationElement.classList.add("show");
+
+                    setTimeout(() => {
+                        notificationElement.classList.remove("show");
+                    }, 3000);
+                }
+            });
+        </script>
+    </body>
+</html>
